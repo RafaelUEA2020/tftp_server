@@ -1,4 +1,50 @@
 current_file = None
+sessions = {}
+class TFTPSession:
+    def __init__(self, filename, mode, addr):
+        self.addr = addr
+        self.filename = f"server_{filename}"
+        self.mode = mode  # 'RRQ' ou 'WRQ'
+        self.file_handle = open(self.filename, "rb" if mode == 'RRQ' else "wb")
+        self.next_block = 1
+        self.completed = False
+
+class SessionManager:
+    def __init__(self):
+        self.sessions = {}
+
+class SessionManager:
+    def __init__(self):
+        self.sessions = {}  # {(ip, port): TFTPSession}
+
+    def handle_packet(self, data, addr, sock):
+        opcode = int.from_bytes(data[:2], "big")
+
+        # Se for um novo pedido (RRQ ou WRQ)
+        if opcode in [1, 2]:
+            filename = data[2:].split(b'\x00')[0].decode()
+            mode = 'RRQ' if opcode == 1 else 'WRQ'
+            self.sessions[addr] = TFTPSession(filename, mode, addr)
+            
+            if mode == 'WRQ':
+                sock.sendto(b'\x00\x04\x00\x00', addr) # ACK 0
+            else:
+                # Lógica para enviar primeiro bloco do RRQ...
+                pass
+
+        # Se for DATA chegando para um WRQ existente
+        elif opcode == 3 and addr in self.sessions:
+            session = self.sessions[addr]
+            block = data[2:4]
+            content = data[4:]
+            
+            session.file_handle.write(content)
+            sock.sendto(b'\x00\x04' + block, addr)
+
+            if len(content) < 512:
+                print(f"Sessão com {addr} finalizada.")
+                session.file_handle.close()
+                del self.sessions[addr]        
 
 def get_filename(data):
     parts = data[2:].split(b'\x00')
