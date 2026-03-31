@@ -1,7 +1,8 @@
 import socket
+from request_handler import handle_request
 
 HOST = "0.0.0.0"   #aceita qualquer IP
-PORT = 2307
+PORT = 69
 
 def start_server():
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -12,10 +13,7 @@ def start_server():
     while True:
         data, addr = server_socket.recvfrom(1024)
 
-        print(f"Recebido de {addr}: {data}")
-
-        response = b"ok"
-        server_socket.sendto(response, addr)
+        handle_request(data, addr, server_socket)
 
 if __name__ == "__main__":
     start_server()
