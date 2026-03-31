@@ -15,36 +15,52 @@ class SessionManager:
 
 class SessionManager:
     def __init__(self):
-        self.sessions = {}  # {(ip, port): TFTPSession}
+        self.sessions = {}
 
     def handle_packet(self, data, addr, sock):
         opcode = int.from_bytes(data[:2], "big")
 
-        # Se for um novo pedido (RRQ ou WRQ)
+        # NOVO PEDIDO (RRQ ou WRQ)
         if opcode in [1, 2]:
             filename = data[2:].split(b'\x00')[0].decode()
             mode = 'RRQ' if opcode == 1 else 'WRQ'
+            
+            print(f"Nova sessão {mode} iniciada para {addr} - Arquivo: {filename}")
+            
+            # Se já existir uma sessão para este IP/Porta, fecha a antiga antes
+            if addr in self.sessions:
+                self.sessions[addr].file_handle.close()
+
             self.sessions[addr] = TFTPSession(filename, mode, addr)
             
             if mode == 'WRQ':
                 sock.sendto(b'\x00\x04\x00\x00', addr) # ACK 0
             else:
-                # Lógica para enviar primeiro bloco do RRQ...
-                pass
+                # Início da lógica de envio (RRQ)
+                self.send_next_block(addr, sock, 1)
 
-        # Se for DATA chegando para um WRQ existente
-        elif opcode == 3 and addr in self.sessions:
-            session = self.sessions[addr]
-            block = data[2:4]
-            content = data[4:]
-            
-            session.file_handle.write(content)
-            sock.sendto(b'\x00\x04' + block, addr)
+        # DADOS RECEBIDOS (DATA - Opcode 3)
+        elif opcode == 3:
+            if addr in self.sessions:
+                session = self.sessions[addr]
+                block_num = data[2:4]
+                content = data[4:]
+                
+                session.file_handle.write(content)
+                sock.sendto(b'\x00\x04' + block_num, addr) # Envia ACK do bloco
 
-            if len(content) < 512:
-                print(f"Sessão com {addr} finalizada.")
-                session.file_handle.close()
-                del self.sessions[addr]        
+                if len(content) < 512:
+                    print(f"Transferência (Upload) de {addr} finalizada.")
+                    session.file_handle.close()
+                    del self.sessions[addr]
+            else:
+                print(f"Aviso: Dados recebidos de {addr} sem sessão ativa.")
+
+        # CONFIRMAÇÃO DE RECEBIMENTO (ACK - Opcode 4)
+        elif opcode == 4:
+            if addr in self.sessions:
+                # Aqui você implementaria o envio do PRÓXIMO bloco no caso de RRQ
+                pass       
 
 def get_filename(data):
     parts = data[2:].split(b'\x00')
@@ -55,6 +71,51 @@ def get_opcode(data):
     Extrai os 2 primeiros bytes da mensagem e converte para inteiro.
     """
     return int.from_bytes(data[:2], byteorder="big")
+
+def handle_session(data, addr, server_socket):
+    opcode = int.from_bytes(data[:2], "big")
+
+    # CASO 1: É um novo pedido (RRQ ou WRQ)
+    if opcode in [1, 2]:
+        filename = get_filename(data)
+        print(f"Nova sessão iniciada para {addr} - Arquivo: {filename}")
+        
+        # Criamos um "contexto" para esse cliente específico
+        sessions[addr] = {
+            'filename': "server_" + filename,
+            'handle': open("server_" + filename, "wb" if opcode == 2 else "rb"),
+            'block': 0 if opcode == 2 else 1,
+            'type': 'PUT' if opcode == 2 else 'GET'
+        }
+
+        if opcode == 2: # WRQ (Escrever)
+            server_socket.sendto(b'\x00\x04\x00\x00', addr) # Envia ACK 0
+        else: # RRQ (Ler)
+            # Aqui você enviaria o Bloco 1 do arquivo...
+            pass
+
+    # CASO 2: É um pacote de DATA (Opcode 3) de uma sessão que já existe
+    elif opcode == 3:
+        if addr in sessions:
+            context = sessions[addr]
+            block_number = data[2:4]
+            file_content = data[4:]
+
+            # Escreve no arquivo específico DESTE cliente
+            context['handle'].write(file_content)
+            
+            # Responde o ACK para ESTE cliente
+            ack = b'\x00\x04' + block_number
+            server_socket.sendto(ack, addr)
+
+            # Finalização
+            if len(file_content) < 512:
+                print(f"Transferência concluída para {addr}")
+                context['handle'].close()
+                del sessions[addr] # Remove a sessão do dicionário
+        else:
+            print(f"Erro: Recebi dados de {addr}, mas não há sessão aberta.")
+
 
 
 def handle_request(data, addr, server_socket):
