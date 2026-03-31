@@ -1,11 +1,38 @@
 # tftp_server
-Server dedicado a implementação do server de TFTP do grupo da disciplina de Topicos avançados de Engenharia de Software.
 
-roda com qualquer IP (o teu local ou o da internet que tu tá conectado)
+Servidor dedicado à implementação do protocolo **TFTP (Trivial File Transfer Protocol)**, desenvolvido para a disciplina de **Tópicos Avançados em Computação I**.
 
-1. roda o servidor primeiro com
+## Integrantes
+- Alicia Benedetto
+- Daffiny Gomes
+- Rafael Santos
+
+## Descrição
+Este projeto implementa um **servidor TFTP em Python**, utilizando comunicação via **UDP**, com suporte às operações principais de:
+
+- **WRQ (Write Request / PUT)** → envio de arquivo do cliente para o servidor
+- **RRQ (Read Request / GET)** → envio de arquivo do servidor para o cliente
+
+O servidor foi desenvolvido para receber requisições de clientes TFTP e processar transferências de arquivos por blocos, conforme a lógica básica do protocolo TFTP.
+
+## Como executar o servidor
+
+Execute o servidor com:
+
+```bash
 python udp_server.py
+```
+##Como testar
 
-2. testa com
+- Teste de upload (PUT)
+
+Envia um arquivo do cliente para o servidor:
+```bash
 tftp -i 127.0.0.1 PUT seuarquivo.txt
+```
+- Teste de download (GET)
+
+Baixa um arquivo do servidor para o cliente:
+```bash
 tftp -i 127.0.0.1 GET seuarquivo.txt
+```
