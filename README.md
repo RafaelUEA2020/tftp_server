@@ -17,7 +17,7 @@ O servidor foi desenvolvido para receber requisições de clientes TFTP e proces
 
 ## Diagrama de Componentes C4
 
-![Diagrama C4 do Servidor TFTP](imagens/diagrama_c4_servidor.jpeg)
+<img src="imagens/diagrama_c4_servidor.jpeg" alt="Diagrama C4" width="470">
 
 ## Como executar o servidor
 
@@ -55,8 +55,8 @@ tftp -i 127.0.0.1 GET seuarquivo.txt
 
 ## Estrutura do projeto
 
-udp_server.py → inicialização do servidor UDP
-request_handler.py → tratamento das requisições e gerenciamento das sessões TFTP
-teste_cli.py → teste simples de requisição
-teste_get.py → teste local da operação GET
-teste_put.py → teste local da operação PUT
+- udp_server.py → inicialização do servidor UDP
+- request_handler.py → tratamento das requisições e gerenciamento das sessões TFTP
+- teste_cli.py → teste simples de requisição
+- teste_get.py → teste local da operação GET
+- teste_put.py → teste local da operação PUT
