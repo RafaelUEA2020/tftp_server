@@ -28,6 +28,8 @@ python udp_server.py
 ```
 ## Como testar
 
+Esta seção descreve os comandos básicos para validar o funcionamento do servidor nas operações de upload (PUT) e download (GET), utilizando um cliente TFTP local.
+
 - Teste de upload (PUT)
 
 Envia um arquivo do cliente para o servidor:
@@ -43,14 +45,24 @@ tftp -i 127.0.0.1 GET seuarquivo.txt
 
 ## Evidências dos testes
 
+Esta seção reúne os resultados obtidos durante a validação prática do servidor, demonstrando que as operações de GET e PUT foram executadas com sucesso e que o sistema respondeu corretamente às requisições.
+
+Os testes realizados tiveram como objetivo validar o funcionamento das duas operações principais do protocolo TFTP implementadas no servidor: **GET (download)** e **PUT (upload)**.
+
 ### Teste de GET
-![Teste GET](imagens/teste_get.png)
+- **Objetivo:** verificar se o servidor consegue localizar um arquivo disponível localmente e enviá-lo corretamente ao cliente em blocos de dados, com confirmação via ACK.
+
+- **Resultado observado:** o servidor iniciou a sessão RRQ, enviou o bloco de dados ao cliente, recebeu a confirmação correspondente e finalizou a transferência com sucesso.
+
+![Teste GET](imagens/teste_GET.png)
 
 ### Teste de PUT
-![Teste PUT](imagens/teste_put.png)
 
-### Arquivo salvo no servidor após PUT
-![Arquivo salvo](imagens/arquivo_salvo.png)
+- **Objetivo:** verificar se o servidor consegue receber um arquivo enviado por um cliente, armazená-lo corretamente no disco local e confirmar o recebimento por meio de ACKs.
+
+- **Resultado observado:** o servidor iniciou a sessão WRQ, recebeu o bloco de dados enviado pelo cliente, confirmou o recebimento e finalizou o upload com sucesso, salvando o arquivo no ambiente do servidor.
+
+![Teste PUT](imagens/teste_PUT.png)
 
 
 ## Estrutura do projeto
